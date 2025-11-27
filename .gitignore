@@ -1,0 +1,13 @@
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor folders
+.vscode/
+.idea/
+
+# Dependency/output caches (future-proof if you add tooling)
+node_modules/
+dist/
+build/
