@@ -10,17 +10,13 @@
       data-printer-name=""
       data-update-interval="2000"
       data-debug="false"
-      data-camera-url=""
-      data-printer-type="moonraker"
-      data-status-url="">
+      data-camera-url="">
     <!-- EASY CONFIG: change only these values -->
     <script>
         window.PRINTER_CONFIG = {
-            name: 'X1C',
-            type: 'bambu',
-            ip: '192.168.1.51',
-            statusUrl: 'http://localhost:9877/status', // bambu-proxy.py endpoint for this printer
-            accessCode: 'ACCESS_CODE', // LAN access code (used for camera auto-build)
+            name: 'Printer 2',
+            ip: 'printer2.local',
+            camera: '', // leave blank to auto-build from IP
             updateInterval: 2000, // ms
             debug: false
         };
@@ -31,14 +27,11 @@
             b.dataset.printerIp = cfg.ip || b.dataset.printerIp || 'localhost';
             b.dataset.cameraUrl = cfg.camera || b.dataset.cameraUrl || '';
             b.dataset.updateInterval = String(cfg.updateInterval || cfg.intervalMs || b.dataset.updateInterval || 2000);
-            b.dataset.printerType = (cfg.type || b.dataset.printerType || 'moonraker').toLowerCase();
-            b.dataset.statusUrl = cfg.statusUrl || b.dataset.statusUrl || '';
             const debugVal = cfg.debug;
             b.dataset.debug = String(debugVal === undefined ? b.dataset.debug || 'false' : debugVal);
 
-            if (!b.dataset.cameraUrl && cfg.type === 'bambu' && cfg.ip && (cfg.accessCode || cfg.cameraAccessCode)) {
-                const code = cfg.accessCode || cfg.cameraAccessCode;
-                b.dataset.cameraUrl = `rtsp://bblp:${code}@${cfg.ip}:8554/live`;
+            if (!b.dataset.cameraUrl && cfg.ip) {
+                b.dataset.cameraUrl = `http://${cfg.ip}/webcam/?action=stream`;
             }
         })(window.PRINTER_CONFIG);
     </script>

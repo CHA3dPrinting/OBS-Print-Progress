@@ -6,7 +6,6 @@ One browser-source scene per printer. Drop an HTML file into OBS, update the `PR
 - `print-progress.css` - shared styling
 - `print-progress.js` - shared logic (polls printer + updates overlays)
 - `printer1.html`, `printer2.html` - example per-printer scenes (copy/rename for more printers)
-- `bambu-proxy.py` - LAN bridge for Bambu printers (P1S/X1C)
 
 Keep everything in the same folder.
 
@@ -15,27 +14,20 @@ Keep everything in the same folder.
 Edit the `PRINTER_CONFIG` block in the HTML:
 - `name`: Friendly printer name shown on the overlay
 - `ip`: Printer API host (e.g., `printer1.local` or `192.168.x.x`)
-- `camera`: Stream URL (e.g., `http://host/webcam/?action=stream`)
+- `camera`: Optional; leave blank to auto-build `http://<ip>/webcam/?action=stream` so the IP is only entered once
 - `updateInterval`: Poll rate in ms (default 2000)
 - `debug`: `true` to show debug info, `false` to hide
 
-### Bambu P1S / X1C
-The overlay talks HTTP, so we run a tiny LAN proxy that subscribes to the printer’s MQTT and exposes `/status`.
-
-1) Enable LAN mode on the printer and note the **access code** and **serial**.
-2) Install the proxy dependency once: `pip install paho-mqtt`
-3) Run the proxy (example):  
-   `python bambu-proxy.py --host 192.168.1.50 --serial PRINTER_SERIAL --access-code ACCESS_CODE --http-port 9876`
-4) CORS: the proxy sends `Access-Control-Allow-Origin`. Set it with `--allow-origin http://localhost` (or your OBS host) if the default `*` is blocked in your setup.
-5) In the HTML set:
-   - `type: 'bambu'`
-   - `ip`: printer IP/hostname
-   - `statusUrl`: proxy endpoint, e.g., `http://localhost:9876/status`
-   - `accessCode`: LAN access code (optional but lets the HTML auto-build the RTSP URL so you don’t repeat the IP)
-   - `camera`: optional; if omitted and `type` is `bambu`, the HTML will build `rtsp://bblp:<accessCode>@<ip>:8554/live`
-   - `updateInterval`/`debug` as needed
-
-For multiple printers, run one proxy per printer on unique `--http-port` values (see `printer1.html`/`printer2.html` examples).
+Moonraker/Mainsail CORS (needed for browser/OBS access):
+Add this to `mainsail.cfg` (or your main `moonraker.conf`), adjusting the IPs to match your OBS/desktop machine:
+```
+[server]
+cors_domains:
+  http://localhost
+  http://127.0.0.1
+  http://192.168.x.x   # your OBS/desktop IP
+  null                 # allows file access
+```
 
 ## Add another printer
 1) Copy an existing HTML (e.g., `printer1.html` -> `newprinter.html`).
