@@ -69,6 +69,13 @@
                 const bedTarget = Math.round(heaterBed.target);
                 document.getElementById('bedTemp').textContent = `${bedTemp}\u00B0C / ${bedTarget}\u00B0C`;
             }
+
+            const chamberTemps = await fetchChamberTemp();
+            if (chamberTemps) {
+                document.getElementById('chamberTemp').textContent = `${chamberTemps.current}\u00B0C / ${chamberTemps.target}\u00B0C`;
+            } else {
+                document.getElementById('chamberTemp').textContent = '--';
+            }
             
             const statusElement = document.getElementById('status');
             const state = printStats.state;
@@ -126,6 +133,38 @@
             console.error('Error fetching print status:', error);
             updateDebug({ error: error?.message || String(error) });
         }
+    }
+
+    async function fetchChamberTemp() {
+        const candidates = [
+            'temperature_sensor chamber',
+            'temperature_sensor chamber_temp',
+            'heater_generic chamber'
+        ];
+
+        for (const obj of candidates) {
+            try {
+                const resp = await fetch(`http://${PRINTER_IP}/printer/objects/query?${encodeURIComponent(obj)}`);
+                if (!resp.ok) continue;
+                const json = await resp.json();
+                const status = json.result?.status;
+                if (!status) continue;
+                const key = Object.keys(status)[0];
+                const entry = status[key] || {};
+                const current = Math.round(entry.temperature ?? entry.temp ?? entry.current ?? entry.temper);
+                const targetRaw = entry.target ?? entry.target_temp ?? entry.target_temperature;
+                const target = targetRaw !== undefined && targetRaw !== null ? Math.round(targetRaw) : Math.round(entry.temperature ?? entry.temp ?? 0);
+                if (Number.isFinite(current)) {
+                    return {
+                        current,
+                        target: Number.isFinite(target) ? target : current
+                    };
+                }
+            } catch (err) {
+                // ignore and try next
+            }
+        }
+        return null;
     }
 
     function formatLayerInfo(current, total) {

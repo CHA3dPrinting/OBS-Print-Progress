@@ -16,6 +16,7 @@ Edit the `PRINTER_CONFIG` block in the HTML:
 - `ip`: Printer API host (e.g., `printer1.local` or `192.168.x.x`)
 - `camera`: Optional; leave blank to auto-build `http://<ip>/webcam/?action=stream` so the IP is only entered once
 - `flipHorizontal` / `flipVertical`: Optional booleans to mirror/flip the camera stream if the raw feed is reversed
+- `chamberTemp`: Fetched automatically if your config exposes a chamber temperature sensor (e.g., `temperature_sensor chamber` or `heater_generic chamber`)
 - `updateInterval`: Poll rate in ms (default 2000)
 - `debug`: `true` to show debug info, `false` to hide
 
