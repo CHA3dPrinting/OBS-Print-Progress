@@ -15,6 +15,7 @@
     const CAMERA_URL = body.dataset.cameraUrl || '';
     const CAMERA_FLIP_X = (body.dataset.cameraFlipX || 'false').toLowerCase() === 'true';
     const CAMERA_FLIP_Y = (body.dataset.cameraFlipY || 'false').toLowerCase() === 'true';
+    const SHOW_CHAMBER = (body.dataset.chamberEnabled || body.dataset.showChamber || 'false').toLowerCase() === 'true';
 
     // Set printer name on load
     const printerNameEl = document.getElementById('printerName');
@@ -70,11 +71,19 @@
                 document.getElementById('bedTemp').textContent = `${bedTemp}\u00B0C / ${bedTarget}\u00B0C`;
             }
 
-            const chamberTemps = await fetchChamberTemp();
-            if (chamberTemps) {
-                document.getElementById('chamberTemp').textContent = `${chamberTemps.current}\u00B0C / ${chamberTemps.target}\u00B0C`;
-            } else {
-                document.getElementById('chamberTemp').textContent = '--';
+            const chamberChip = document.getElementById('chamberChip');
+            if (chamberChip) {
+                if (!SHOW_CHAMBER) {
+                    chamberChip.classList.add('hidden');
+                } else {
+                    chamberChip.classList.remove('hidden');
+                    const chamberTemps = await fetchChamberTemp();
+                    if (chamberTemps) {
+                        document.getElementById('chamberTemp').textContent = `${chamberTemps.current}\u00B0C / ${chamberTemps.target}\u00B0C`;
+                    } else {
+                        document.getElementById('chamberTemp').textContent = '--';
+                    }
+                }
             }
             
             const statusElement = document.getElementById('status');

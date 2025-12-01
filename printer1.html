@@ -14,11 +14,12 @@
     <!-- EASY CONFIG: change only these values -->
     <script>
         window.PRINTER_CONFIG = {
-            name: 'Printer 1',
-            ip: 'printer1.local', // printer IP/hostname
+            name: 'Hoss (SV08)',
+            ip: 'hoss.dracarsfamily', // printer IP/hostname
             camera: '', // leave blank to auto-build from IP
             flipHorizontal: false, // set true if the raw stream is mirrored
-            flipVertical: false,   // set true if the raw stream is upside down
+            flipVertical: true,   // set true if the raw stream is upside down
+            showChamber: false,    // set true if you have a chamber thermistor
             updateInterval: 2000, // ms
             debug: false
         };
@@ -31,6 +32,7 @@
             b.dataset.cameraUrl = cfg.camera || b.dataset.cameraUrl || '';
             b.dataset.cameraFlipX = String(cfg.flipHorizontal ?? b.dataset.cameraFlipX ?? 'false');
             b.dataset.cameraFlipY = String(cfg.flipVertical ?? b.dataset.cameraFlipY ?? 'false');
+            b.dataset.chamberEnabled = String(cfg.showChamber ?? b.dataset.chamberEnabled ?? 'false');
             b.dataset.updateInterval = String(cfg.updateInterval || cfg.intervalMs || b.dataset.updateInterval || 2000);
             const debugVal = cfg.debug;
             b.dataset.debug = String(debugVal === undefined ? b.dataset.debug || 'false' : debugVal);
