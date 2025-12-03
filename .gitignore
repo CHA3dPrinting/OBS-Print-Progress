@@ -13,5 +13,4 @@ dist/
 build/
 
 # Personal overlays (keep local)
-hoss.html
-sam.html
+printers.json

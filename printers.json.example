@@ -1,0 +1,48 @@
+{
+  "printers": [
+    {
+      "id": "hoss",
+      "name": "Hoss (SV08)",
+      "ip": "hoss.dracarsfamily",
+      "camera": "",
+      "flipHorizontal": false,
+      "flipVertical": true,
+      "showChamber": true,
+      "updateInterval": 2000,
+      "debug": false
+    },
+    {
+      "id": "sam",
+      "name": "Sam (SV06 Plus)",
+      "ip": "sam.dracarsfamily",
+      "camera": "",
+      "flipHorizontal": false,
+      "flipVertical": false,
+      "showChamber": false,
+      "updateInterval": 2000,
+      "debug": false
+    },
+    {
+      "id": "printer2",
+      "name": "Printer 2",
+      "ip": "printer2.local",
+      "camera": "",
+      "flipHorizontal": false,
+      "flipVertical": false,
+      "showChamber": false,
+      "updateInterval": 2000,
+      "debug": false
+    },
+    {
+      "id": "printer1",
+      "name": "Printer 1",
+      "ip": "printer.local",
+      "camera": "",
+      "flipHorizontal": false,
+      "flipVertical": false,
+      "showChamber": false,
+      "updateInterval": 2000,
+      "debug": false
+    }
+  ]
+}
