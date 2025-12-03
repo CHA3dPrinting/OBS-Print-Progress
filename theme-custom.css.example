@@ -1,0 +1,26 @@
+/* Custom Theme Example - CRAZY COLORS EDITION
+   This is an example showing the theme system is working!
+   
+   To use:
+   1. Copy this file to "theme-custom.css" (without .example)
+   2. Edit the colors to your liking
+   3. Refresh your OBS browser source
+   
+   The theme loads automatically - no HTML changes needed!
+   
+   Available theme variables:
+   --theme-primary: Main accent color (progress bar, status pill)
+   --theme-secondary: Secondary accent (progress bar gradient end)
+   --theme-progress: Progress bar color (if different from primary)
+   --theme-glow: Loading state glow color and opacity
+   --theme-thumbnail-glow: Thumbnail outer and inner glow color
+*/
+
+:root {
+    /* WILD Rainbow Theme - You'll DEFINITELY know if this is active! */
+    --theme-primary: #ff00ff;        /* Hot magenta */
+    --theme-secondary: #00ffff;      /* Cyan */
+    --theme-progress: #ff00ff;       /* Magenta progress */
+    --theme-glow: rgba(255, 0, 255, 0.3);  /* Bright magenta glow */
+    --theme-thumbnail-glow: rgba(0, 255, 255, 0.7);  /* Intense cyan thumbnail glow */
+}

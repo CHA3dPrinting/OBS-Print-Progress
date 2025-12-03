@@ -106,5 +106,15 @@
     </div>
 
     <script src="print-progress.js"></script>
+    <script>
+        // Auto-load custom theme if it exists (gitignored file for safe updates)
+        (function() {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'theme-custom.css';
+            link.onerror = () => link.remove();
+            document.head.appendChild(link);
+        })();
+    </script>
 </body>
 </html>

@@ -1,21 +1,21 @@
 :root {
     --bg: rgba(5, 7, 13, 0.85);
     --panel: rgba(17, 19, 26, 0.7);
-    --accent:  #ffa500;
-    --accent-2: #ff7f00;
+    --accent:  #3A86FF;
+    --accent-2: #1E5ED9;
     --text: #e8eef7;
     --muted: #9fb2c7;
     --error: #ff6666;
-    --idle: #ffba59;
+    --idle: #5EA3FF;
     --radius: 14px;
     --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
     
     /* Theme colors - Override these for custom themes */
-    --theme-primary: #ffa500;        /* Main accent color */
-    --theme-secondary: #ff7f00;      /* Secondary accent */
-    --theme-progress: #ffa500;       /* Progress bar color */
-    --theme-glow: rgba(255, 140, 0, 0.15);  /* Loading state glow */
-    --theme-thumbnail-glow: rgba(255, 165, 0, 0.4);  /* Thumbnail border glow */
+    --theme-primary: #3A86FF;        /* Main accent color */
+    --theme-secondary: #1E5ED9;      /* Secondary accent */
+    --theme-progress: #3A86FF;       /* Progress bar color */
+    --theme-glow: rgba(58, 134, 255, 0.15);  /* Loading state glow */
+    --theme-thumbnail-glow: rgba(58, 134, 255, 0.4);  /* Thumbnail border glow */
 }
 
 * {
@@ -105,7 +105,8 @@ body {
     border: 2px solid rgba(255,255,255,0.3);
     box-shadow: 
         0 4px 12px rgba(0,0,0,0.55),
-        0 0 20px var(--theme-thumbnail-glow);  /* Themed glow */
+        0 0 20px var(--theme-thumbnail-glow),  /* Outer glow */
+        inset 0 0 60px rgba(58, 134, 255, 0.25);  /* Inner glow - brighter */
     display: none; /* Start hidden, shown by JS when printing */
 }
 

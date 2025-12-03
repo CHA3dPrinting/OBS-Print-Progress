@@ -1,4 +1,12 @@
 (async function () {
+    // Utility functions needed during initialization
+    function parseBool(val) {
+        if (val === undefined || val === null) return false;
+        if (typeof val === 'boolean') return val;
+        const str = String(val).toLowerCase();
+        return str === 'true' || str === '1' || str === 'yes';
+    }
+
     const body = document.body || document.documentElement;
 
     let PRINTER_IP = body.dataset.printerIp || 'localhost';
@@ -45,6 +53,16 @@
         SHOW_CHAMBER = parseBool(config.showChamber ?? b.dataset.chamberEnabled ?? b.dataset.showChamber ?? 'false');
         UPDATE_INTERVAL = Number(config.updateInterval || config.intervalMs || b.dataset.updateInterval || 2000) || 2000;
         DEBUG = parseBool(config.debug ?? b.dataset.debug ?? 'false');
+        
+        console.log('[OBS Print Progress] DEBUG mode:', DEBUG);
+        if (DEBUG) {
+            console.log('[OBS Print Progress] Config loaded:', {
+                name: PRINTER_NAME,
+                ip: PRINTER_IP,
+                camera: CAMERA_URL,
+                showChamber: SHOW_CHAMBER
+            });
+        }
 
         // Auto-generate camera URL if not explicitly provided in config
         if (!CAMERA_URL && PRINTER_IP && PRINTER_IP !== 'localhost') {
@@ -70,13 +88,24 @@
             query.get('name') ||
             ''
         ).toLowerCase();
+        
+        console.log('[OBS Print Progress] Loading config for printer key:', key || '(default/first)');
+        
         const queryOverride = parseQueryConfig(query);
+        if (queryOverride) {
+            console.log('[OBS Print Progress] Query params found:', queryOverride);
+        }
 
         const list = await fetchPrinterList();
+        console.log('[OBS Print Progress] Printer list loaded:', list);
+        
         if (list && list.length) {
             const found = selectConfig(list, key);
             const base = found || list[0];
-            return { ...base, ...queryOverride };
+            console.log('[OBS Print Progress] Selected config:', base);
+            const merged = { ...base, ...queryOverride };
+            console.log('[OBS Print Progress] Final config (with overrides):', merged);
+            return merged;
         }
 
         if (queryOverride && queryOverride.ip) return queryOverride;
@@ -85,13 +114,21 @@
     }
 
     async function fetchPrinterList() {
+        console.log('[OBS Print Progress] Fetching printer list...');
+        
         // Inline JSON script fallback (avoids file:// CORS)
         const inlineList = readInlinePrinterList();
-        if (inlineList) return inlineList;
+        if (inlineList) {
+            console.log('[OBS Print Progress] Using inline printer list');
+            return inlineList;
+        }
 
         // Global JS variable fallback (window.PRINTERS or window.PRINTER_CONFIGS)
         const globalList = readGlobalPrinterList();
-        if (globalList) return globalList;
+        if (globalList) {
+            console.log('[OBS Print Progress] Using global printer list');
+            return globalList;
+        }
 
         // First attempt: printers.json (preferred)
         const main = await fetchJsonConfig('printers.json');
@@ -106,6 +143,8 @@
 
     async function fetchJsonConfig(path) {
         const url = new URL(path, window.location.href).href;
+        console.log('[OBS Print Progress] Fetching config from:', url);
+        
         // Try fetch with timeout
         try {
             const controller = new AbortController();
@@ -116,14 +155,17 @@
             
             if (resp.ok) {
                 const json = await resp.json();
+                console.log('[OBS Print Progress] Config loaded from', path, ':', json);
                 if (Array.isArray(json)) return json;
                 if (Array.isArray(json.printers)) return json.printers;
+            } else {
+                console.warn('[OBS Print Progress] Config fetch failed:', resp.status, resp.statusText);
             }
         } catch (err) {
             if (err.name === 'AbortError') {
-                console.warn(`Timeout fetching ${url}`);
+                console.warn(`[OBS Print Progress] Timeout fetching ${url}`);
             } else {
-                console.warn(`Could not fetch ${url}:`, err?.message || err);
+                console.warn(`[OBS Print Progress] Could not fetch ${url}:`, err?.message || err);
             }
         }
 
@@ -581,21 +623,14 @@
         };
     }
 
-    function parseBool(val) {
-        if (val === undefined || val === null) return false;
-        if (typeof val === 'boolean') return val;
-        const str = String(val).toLowerCase();
-        return str === 'true' || str === '1' || str === 'yes';
-    }
-
     function formatLayerInfo(current, total) {
-        const hasCurrent = current !== null && current !== undefined;
-        const hasTotal = total !== null && total !== undefined;
+        const hasCurrent = current !== null && current !== undefined && current > 0;
+        const hasTotal = total !== null && total !== undefined && total > 0;
         
         if (!hasCurrent && !hasTotal) return '--';
         if (hasCurrent && hasTotal) return `${current} / ${total}`;
-        if (hasCurrent) return `${current}`;
-        return `-- / ${total}`;
+        if (hasCurrent) return `${current} / --`;  // Show current with unknown total
+        return `-- / ${total}`;  // Show total when current unknown
     }
 
     function formatTime(seconds) {
@@ -681,8 +716,16 @@
         const metadataLayer = computeLayerFromMetadata(toolhead, metadataCache.data);
         const progressLayer = computeLayerFromProgress(displayStatus, metadataCache.data);
         
+        // Fallback: if no metadata, estimate layer from Z height with common layer height
+        let fallbackCurrent = null;
+        const currentZ = toolhead?.position?.[2];
+        if (currentZ !== undefined && currentZ !== null && currentZ > 0 && !metadataLayer.current) {
+            // Assume 0.2mm layer height if we have no other info
+            fallbackCurrent = Math.max(1, Math.floor(currentZ / 0.2));
+        }
+        
         return {
-            currentLayer: firstNonNull(slicerCurrent, metadataLayer.current, progressLayer.current),
+            currentLayer: firstNonNull(slicerCurrent, metadataLayer.current, progressLayer.current, fallbackCurrent),
             totalLayer: firstNonNull(slicerTotal, metadataLayer.total, progressLayer.total)
         };
     }
@@ -758,10 +801,12 @@
             return;
         }
 
+        if (DEBUG) console.log('Loading metadata for:', filename);
         metadataCache.filename = filename;
         const metaResult = await fetchMetadata(filename);
         metadataCache.data = metaResult?.data || null;
         metadataCache.source = metaResult?.source || null;
+        if (DEBUG) console.log('Metadata loaded:', metadataCache.source, metadataCache.data);
     }
 
     async function fetchMetadata(filename) {
@@ -791,16 +836,23 @@
     async function fetchMetadataFromApi(fileParam) {
         // Only try the exact filename - Moonraker knows the path
         try {
-            const response = await fetch(`http://${PRINTER_IP}/server/files/metadata?filename=${encodeURIComponent(fileParam)}`, {
+            const url = `http://${PRINTER_IP}/server/files/metadata?filename=${encodeURIComponent(fileParam)}`;
+            if (DEBUG) console.log('Fetching metadata from API:', url);
+            
+            const response = await fetch(url, {
                 method: 'GET',
                 cache: 'no-cache'
             });
+            
             if (response.ok) {
                 const data = await response.json();
+                if (DEBUG) console.log('Metadata received:', data.result);
                 return data.result;
+            } else {
+                if (DEBUG) console.log('Metadata API returned:', response.status, response.statusText);
             }
         } catch (err) {
-            // Metadata not available - will retry on next update
+            if (DEBUG) console.error('Metadata API error:', err);
         }
         return null;
     }
@@ -852,25 +904,61 @@
             return Number.isFinite(num) ? num : null;
         };
 
+        if (DEBUG) console.log('[OBS Print Progress] Parsing gcode header, first 10 comment lines:');
+        let debugLineCount = 0;
+
         for (const rawLine of lines) {
             const line = rawLine.trim();
             if (!line.startsWith(';')) continue;
+            
+            if (DEBUG && debugLineCount < 10) {
+                console.log('  ', line);
+                debugLineCount++;
+            }
 
             const lower = line.toLowerCase();
-            meta.layer_height = meta.layer_height ?? numberFromLine(lower, /layer[_ ]?height[:=]\s*([\d.]+)/i);
-            meta.first_layer_height = meta.first_layer_height ?? numberFromLine(lower, /first[_ ]?layer[_ ]?height[:=]\s*([\d.]+)/i);
-            meta.layer_count = meta.layer_count ?? numberFromLine(lower, /layer[_ ]?(?:count|total|totals?)[:=]\s*([\d]+)/i);
-            meta.layer_count = meta.layer_count ?? numberFromLine(lower, /total[_ ]?layers?[:=]\s*([\d]+)/i);
-            meta.estimated_time = meta.estimated_time ?? numberFromLine(lower, /(?:estimated[_ ]?time|estimated[_ ]?print[_ ]?time|print[_ ]?time)[:=]\s*([\d.]+)/i);
-            meta.estimated_time = meta.estimated_time ?? numberFromLine(lower, /;time[:=]\s*([\d.]+)/i);
-            const heightVal = numberFromLine(lower, /(?:maxz|height|object[_ ]?height)[:=]\s*([\d.]+)/i);
+            
+            // Layer height variations
+            meta.layer_height = meta.layer_height ?? numberFromLine(lower, /layer[_ ]?height[:=\s]\s*([\d.]+)/i);
+            meta.layer_height = meta.layer_height ?? numberFromLine(lower, /;\s*layer_height\s*=\s*([\d.]+)/i);
+            
+            // First layer height
+            meta.first_layer_height = meta.first_layer_height ?? numberFromLine(lower, /first[_ ]?layer[_ ]?height[:=\s]\s*([\d.]+)/i);
+            meta.first_layer_height = meta.first_layer_height ?? numberFromLine(lower, /initial[_ ]?layer[_ ]?height[:=\s]\s*([\d.]+)/i);
+            
+            // Layer count variations
+            meta.layer_count = meta.layer_count ?? numberFromLine(lower, /layer[_ ]?(?:count|total|totals?)[:=\s]\s*([\d]+)/i);
+            meta.layer_count = meta.layer_count ?? numberFromLine(lower, /total[_ ]?layers?[:=\s]\s*([\d]+)/i);
+            meta.layer_count = meta.layer_count ?? numberFromLine(lower, /;\s*total_layer_count\s*=\s*([\d]+)/i);
+            
+            // Estimated time
+            meta.estimated_time = meta.estimated_time ?? numberFromLine(lower, /(?:estimated[_ ]?time|estimated[_ ]?print[_ ]?time|print[_ ]?time)[:=\s]\s*([\d.]+)/i);
+            meta.estimated_time = meta.estimated_time ?? numberFromLine(lower, /;time[:=\s]\s*([\d.]+)/i);
+            meta.estimated_time = meta.estimated_time ?? numberFromLine(lower, /;\s*estimated_printing_time\(normal\)\s*=\s*([\d.]+)/i);
+            
+            // Object height
+            const heightVal = numberFromLine(lower, /(?:maxz|max_z|height|object[_ ]?height)[:=\s]\s*([\d.]+)/i);
             if (heightVal !== null) {
                 meta.object_height = meta.object_height ?? heightVal;
             }
         }
 
+        if (DEBUG) {
+            console.log('[OBS Print Progress] Parsed gcode metadata:', meta);
+        }
+
         if (!meta.object_height && meta.layer_height && meta.layer_count) {
             meta.object_height = meta.layer_height * meta.layer_count;
+        }
+        
+        // If we have object_height but no layer_height, try common defaults
+        if (meta.object_height && !meta.layer_height && !meta.layer_count) {
+            // Try to infer from filename (e.g., "0.2" in filename)
+            const heightMatch = text.match(/;\s*(?:layer[_ ]?height|Layer height).*?(0\.\d+)/i);
+            if (heightMatch) {
+                meta.layer_height = Number(heightMatch[1]);
+                if (DEBUG) console.log('[OBS Print Progress] Inferred layer height from text:', meta.layer_height);
+            }
         }
 
         if (meta.layer_height || meta.first_layer_height || meta.layer_count || meta.object_height) {
@@ -882,18 +970,19 @@
 
     function normalizeFilename(filename) {
         if (!filename) return null;
+        
+        // Remove common path prefixes
         let name = filename.replace(/^~\//, '')
-                           .replace(/^printer_data\//, '')
-                           .replace(/^gcode_files\//, '')
+                           .replace(/^\//, '')
+                           .replace(/^printer_data\/gcodes\//, 'gcodes/')
+                           .replace(/^gcode_files\//, 'gcodes/')
                            .replace(/^files\//, '');
-
+        
+        // If it doesn't start with gcodes/, add it
         if (!name.startsWith('gcodes/')) {
-            name = name.replace(/^gcodes\//, 'gcodes/');
-            if (!name.startsWith('gcodes/')) {
-                name = `gcodes/${name}`;
-            }
+            name = `gcodes/${name}`;
         }
-
+        
         return name;
     }
 

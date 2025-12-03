@@ -3,12 +3,12 @@
 Single browser source that targets any printer via a query param and `printers.json`.
 
 ## Files
-- `printer.html` — the only HTML you load in OBS (`?printer=<id>` selects the printer)
-- `printers.json` — array of printer configs (id, ip, camera, flips, etc.)
-- `print-progress.css` — shared styling
-- `print-progress.js` — shared logic (polls printer + updates overlays)
-- `start-server.bat` — Windows helper to run a local server
-- `start-server.sh` — macOS/Linux helper to run a local server
+- `printer.html` ï¿½ the only HTML you load in OBS (`?printer=<id>` selects the printer)
+- `printers.json` ï¿½ array of printer configs (id, ip, camera, flips, etc.)
+- `print-progress.css` ï¿½ shared styling
+- `print-progress.js` ï¿½ shared logic (polls printer + updates overlays)
+- `start-server.bat` ï¿½ Windows helper to run a local server
+- `start-server.sh` ï¿½ macOS/Linux helper to run a local server
 
 Keep everything in the same folder.
 
@@ -44,12 +44,44 @@ Camera orientation tips:
 ## Select a printer in OBS
 1) Start a local server:
    - Windows: double-click `start-server.bat`
-   - macOS/Linux: run `./start-server.sh` (ensure it’s executable: `chmod +x start-server.sh`)
+   - macOS/Linux: run `./start-server.sh` (ensure itï¿½s executable: `chmod +x start-server.sh`)
 2) In OBS, add a **Browser** source and set the URL to `http://localhost:8000/printer.html?printer=<id>` (matching an `id` from `printers.json`).
 3) Set the source width/height you want; the overlay will scale to fit.
 4) If loading over `file://` fails due to CORS, serve via the local server (above), embed configs inline, or pass everything via query params (`?ip=...&name=...&camera=...&flipX=1&flipY=0&chamber=1`).
 5) If the camera doesn't load, confirm the `camera` URL is reachable and supports browser playback (MJPEG/RTSP via OBS).
 
+## Customizing Colors (Themes)
+
+The overlay supports custom color themes. Three example themes are included:
+
+- `theme-blue.css` (default colors)
+- `theme-green.css`
+- `theme-red.css`
+
+### Creating Your Own Theme
+
+1) Edit `theme-custom.css` (already exists, gitignored so updates won't overwrite it)
+2) Customize the CSS variables:
+   - `--theme-primary`: Main accent color (progress bar, status)
+   - `--theme-secondary`: Secondary accent (progress gradient)
+   - `--theme-progress`: Progress bar color
+   - `--theme-glow`: Loading state glow
+   - `--theme-thumbnail-glow`: Thumbnail glow effect
+3) Save and refresh your OBS browser source
+
+The custom theme is **automatically loaded** if it exists - no need to modify any HTML!
+
+### Using Pre-made Themes
+
+To use an example theme:
+
+1) Copy the contents from `theme-blue.css`, `theme-green.css`, or `theme-red.css`
+2) Paste into `theme-custom.css`
+3) Modify colors as desired
+
 ## Notes
+
 - Debug info renders in a small block at the bottom; leave `debug: false` for clean output.
 - If you move the folder, repoint the Browser source(s) to the new path.
+- `theme-custom.css` is gitignored to preserve your customizations across updates.
+
