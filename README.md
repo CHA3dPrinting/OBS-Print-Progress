@@ -3,11 +3,12 @@
 Single browser source that targets any printer via a query param and `printers.json`.
 
 ## Files
-- `printer.html` â€” the only HTML you load in OBS (`?printer=<id>` selects the printer)
-- `printers.json` â€” array of printer configs (id, ip, camera, flips, etc.)
-- `print-progress.css` â€” shared styling
-- `print-progress.js` â€” shared logic (polls printer + updates overlays)
-- `start-server.bat` â€” Windows helper to run a local server (and optionally launch OBS)
+- `printer.html` — the only HTML you load in OBS (`?printer=<id>` selects the printer)
+- `printers.json` — array of printer configs (id, ip, camera, flips, etc.)
+- `print-progress.css` — shared styling
+- `print-progress.js` — shared logic (polls printer + updates overlays)
+- `start-server.bat` — Windows helper to run a local server
+- `start-server.sh` — macOS/Linux helper to run a local server
 
 Keep everything in the same folder.
 
@@ -38,12 +39,12 @@ cors_domains:
 
 Camera orientation tips:
 - Check the raw stream (same URL the overlay uses). If it's mirrored or upside down compared to Mainsail's preview, set `flipHorizontal: true` and/or `flipVertical: true` in `printers.json`.
-- In OBS you can also right-click the Browser source â†’ Transform â†’ Flip to adjust per-source.
+- In OBS you can also right-click the Browser source ? Transform ? Flip to adjust per-source.
 
 ## Select a printer in OBS
 1) Start a local server:
    - Windows: double-click `start-server.bat`
-   - macOS/Linux: run `./start-server.sh` (ensure itâ€™s executable: `chmod +x start-server.sh`)
+   - macOS/Linux: run `./start-server.sh` (ensure it’s executable: `chmod +x start-server.sh`)
 2) In OBS, add a **Browser** source and set the URL to `http://localhost:8000/printer.html?printer=<id>` (matching an `id` from `printers.json`).
 3) Set the source width/height you want; the overlay will scale to fit.
 4) If loading over `file://` fails due to CORS, serve via the local server (above), embed configs inline, or pass everything via query params (`?ip=...&name=...&camera=...&flipX=1&flipY=0&chamber=1`).

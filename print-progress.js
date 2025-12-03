@@ -402,6 +402,8 @@
                 
                 // Thumbnail display
                 const thumbEl = document.getElementById("thumbnail");
+                const previewContainer = document.getElementById("previewFloating");
+                
                 if (thumbEl) {
                     const normalized = normalizeFilename(printStats.filename);
                     const loadedFor = thumbEl.dataset.loadedFor || "";
@@ -410,11 +412,13 @@
                         thumbEl.dataset.loadedFor = normalized;
                         // Keep hidden while loading
                         thumbEl.style.display = "none";
+                        if (previewContainer) previewContainer.classList.remove('loaded');
 
                         extractThumbnailFromGcode(normalized).then(b64 => {
                             if (b64 && b64.length > 100) {  // Sanity check for valid base64
                                 thumbEl.src = `data:image/png;base64,${b64}`;
                                 thumbEl.style.display = "block";
+                                if (previewContainer) previewContainer.classList.add('loaded');
 
                                 const fileLabel = document.getElementById("thumbnailFilename");
                                 if (fileLabel) {
