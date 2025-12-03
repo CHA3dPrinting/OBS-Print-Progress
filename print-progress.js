@@ -437,16 +437,22 @@
             } else if (state === 'paused') {
                 statusElement.className = 'status-pill idle';
                 document.getElementById('layerInfo').textContent = '--';
+                
+                // Show slicer total time even when paused (if available)
+                const slicerTotal = getSlicerTotalSeconds(metadataCache.data, printStats.info);
                 setTimeValue('timeEstimate', null);
-                setTimeValue('timeSlicer', null);
-                setTimeValue('timeTotal', null);
+                setTimeValue('timeSlicer', slicerTotal);
+                setTimeValue('timeTotal', getElapsedTime(printStats));
                 hideThumbnail();
             } else {
                 statusElement.className = 'status-pill idle';
                 document.getElementById('progressBar').style.width = '0%';
                 document.getElementById('percentage').textContent = '0%';
+                
+                // Show slicer total time even when idle (if available)
+                const slicerTotal = getSlicerTotalSeconds(metadataCache.data, printStats.info);
                 setTimeValue('timeEstimate', null);
-                setTimeValue('timeSlicer', null);
+                setTimeValue('timeSlicer', slicerTotal);
                 setTimeValue('timeTotal', null);
                 document.getElementById('layerInfo').textContent = '--';
                 document.getElementById('filename').textContent = '--';
