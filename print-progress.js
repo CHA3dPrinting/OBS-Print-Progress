@@ -783,26 +783,18 @@
     }
 
     async function fetchMetadataFromApi(fileParam) {
-        const candidates = [
-            fileParam,
-            fileParam.replace(/^gcodes\//, ''),
-            `gcodes/${fileParam.replace(/^gcodes\//, '')}`,
-            `printer_data/${fileParam}`,
-            `gcode_files/${fileParam.replace(/^gcodes\//, '')}`
-        ];
-
-        for (const candidate of candidates) {
-            try {
-                const response = await fetch(`http://${PRINTER_IP}/server/files/metadata?filename=${encodeURIComponent(candidate)}`);
-                if (!response.ok) {
-                    // Don't log 404s - metadata might not be ready yet
-                    continue;
-                }
+        // Only try the exact filename - Moonraker knows the path
+        try {
+            const response = await fetch(`http://${PRINTER_IP}/server/files/metadata?filename=${encodeURIComponent(fileParam)}`, {
+                method: 'GET',
+                cache: 'no-cache'
+            });
+            if (response.ok) {
                 const data = await response.json();
                 return data.result;
-            } catch (err) {
-                // Silently continue to next candidate
             }
+        } catch (err) {
+            // Metadata not available - will retry on next update
         }
         return null;
     }
