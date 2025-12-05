@@ -541,7 +541,8 @@
             const path = normalizeFilename(filename);
             if (!path) return null;
 
-            const url = `http://${PRINTER_IP}/server/files/${encodeURI(path)}`;
+            const url = `http://${PRINTER_IP}/server/files/gcodes/${encodeURI(path)}`;
+            if (DEBUG) console.log('[OBS Print Progress] Thumbnail URL:', url);
 
             const resp = await fetch(url, {
                 headers: { Range: "bytes=0-100000" }  // Reduced from 250KB to 100KB

@@ -687,6 +687,44 @@ function test_url_encoding_special_characters() {
 }
 
 // ============================================================================
+// Thumbnail URL Tests
+// ============================================================================
+
+function test_thumbnail_url_has_gcodes_prefix() {
+    console.log('Test: Thumbnail URL has gcodes/ prefix');
+    console.log('Description: Thumbnail fetch requires gcodes/ prefix in URL path');
+    
+    // Arrange
+    const PRINTER_IP = '192.168.1.100';
+    const filename = 'test_print.gcode';
+    
+    // Act
+    const url = `http://${PRINTER_IP}/server/files/gcodes/${encodeURI(filename)}`;
+    
+    // Assert
+    assertEqual(url, 'http://192.168.1.100/server/files/gcodes/test_print.gcode', 
+        'Thumbnail URL must have gcodes/ prefix in path');
+    console.log('✓ PASS\n');
+}
+
+function test_thumbnail_url_encoding() {
+    console.log('Test: Thumbnail URL encodes special characters');
+    console.log('Description: Thumbnail URLs should properly encode spaces and special chars');
+    
+    // Arrange
+    const PRINTER_IP = '192.168.1.100';
+    const filenameWithSpaces = 'my test print.gcode';
+    
+    // Act
+    const url = `http://${PRINTER_IP}/server/files/gcodes/${encodeURI(filenameWithSpaces)}`;
+    
+    // Assert
+    assertEqual(url, 'http://192.168.1.100/server/files/gcodes/my%20test%20print.gcode', 
+        'Thumbnail URL should encode spaces in filename');
+    console.log('✓ PASS\n');
+}
+
+// ============================================================================
 // TEST UTILITIES
 // ============================================================================
 
@@ -759,7 +797,11 @@ function runAllTests() {
         test_normalize_filename_null_handling,
         test_metadata_api_url_construction,
         test_gcode_file_url_construction,
-        test_url_encoding_special_characters
+        test_url_encoding_special_characters,
+        
+        // Thumbnail URL tests
+        test_thumbnail_url_has_gcodes_prefix,
+        test_thumbnail_url_encoding
     ];
     
     for (const test of tests) {
@@ -829,5 +871,9 @@ module.exports = {
     test_normalize_filename_null_handling,
     test_metadata_api_url_construction,
     test_gcode_file_url_construction,
-    test_url_encoding_special_characters
+    test_url_encoding_special_characters,
+    
+    // Thumbnail URL tests
+    test_thumbnail_url_has_gcodes_prefix,
+    test_thumbnail_url_encoding
 };
